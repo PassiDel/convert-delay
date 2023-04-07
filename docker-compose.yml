@@ -1,0 +1,32 @@
+version: "3"
+volumes:
+  postgres:
+    driver: local
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      POSTGRES_DB: ${DATABASE_DATABASE:-db}
+      PGDATA: /data/postgres
+    volumes:
+      - ./data/postgres:/data/postgres
+    ports:
+      - "127.0.0.1:${DATABASE_PORT}:5432"
+    restart: unless-stopped
+  pgbouncer:
+    image: bitnami/pgbouncer
+    environment:
+      POSTGRESQL_HOST: "postgres"
+      POSTGRESQL_DATABASE: ${DATABASE_DATABASE:-db}
+      PGBOUNCER_DATABASE: ${DATABASE_DATABASE:-db}
+      POSTGRESQL_USERNAME: ${DATABASE_USER:-postgres}
+      POSTGRESQL_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      PGBOUNCER_PORT: ${BOUNCER_PORT}
+      PGBOUNCER_POOL_MODE: "transaction"
+    ports:
+      - "127.0.0.1:${BOUNCER_PORT:-6432}:6432"
+    links:
+      - postgres:postgres
