@@ -1,11 +1,10 @@
-import { dataDir, pool } from './pool.js';
+import { pool } from './pool.js';
 import { PrismaClient } from '@prisma/client';
 
 import cliProgress from 'cli-progress';
 
-const prisma = new PrismaClient();
-
 export async function main() {
+  const prisma = new PrismaClient();
   const startTime = Date.now();
 
   const bar = new cliProgress.MultiBar({}, cliProgress.Presets.shades_classic);
@@ -18,7 +17,6 @@ export async function main() {
 
   // execute job queue
   bar.log(`${new Date().toLocaleString()}\tstart\n`);
-  bar1.increment();
   await Promise.allSettled(
     jobs.map(async (p) => {
       try {

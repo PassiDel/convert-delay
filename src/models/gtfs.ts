@@ -7,12 +7,27 @@ export interface Agency {
   agency_phone: string;
 }
 
+export const RouteType = {
+  TRAM: 0,
+  SUBWAY: 1,
+  RAIL: 2,
+  BUS: 3,
+  FERRY: 4,
+  CABLE_TRAM: 5,
+  AERIAL_LIFT: 6,
+  FUNICULAR: 7,
+  TROLLYBUS: 11,
+  MONORAIL: 12
+} as const;
+
+export type RouteTypeType = (typeof RouteType)[keyof typeof RouteType];
+
 export interface Route {
   route_id: number;
   agency_id: number;
   route_short_name: string;
   route_long_name: string;
-  route_type: number;
+  route_type: RouteTypeType;
   route_color: string;
   route_text_color: string;
   route_desc: string;

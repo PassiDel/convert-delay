@@ -1,17 +1,5 @@
 import { PrismaClient, StopDelay } from '@prisma/client';
 import { DataType, PoolMessage } from './pool.js';
-import { resolve } from 'path';
-import { promises as fs } from 'fs';
-import {
-  FeedEntity,
-  FeedMessage,
-  hasArrival,
-  hasDeparture,
-  isStopTimeEventDelay,
-  ScheduleRelationship,
-  StopTimeUpdateTypeModified,
-  TripDescriptor
-} from '../models/gtfsrt.js';
 
 // noinspection ES6ConvertRequireIntoImport
 const {
@@ -56,6 +44,9 @@ parentPort.on('message', async ({ start_date }) => {
       trip_id: {
         in: trip_ids.map((t) => t.trip_id)
       }
+    },
+    orderBy: {
+      date: 'asc'
     }
   });
 
@@ -63,6 +54,7 @@ parentPort.on('message', async ({ start_date }) => {
     number,
     typeof stopTimes
   >;
+  const notFoundTrips: number[] = [];
   let totalCount = 0;
   const finalStops: StopDelay[] = [];
   await Promise.all(
@@ -73,7 +65,10 @@ parentPort.on('message', async ({ start_date }) => {
           trip_id
         }
       });
-      if (!tripTime.has(trip_id) || updates.length <= 0) return;
+      if (!tripTime.has(trip_id) || updates.length <= 0) {
+        notFoundTrips.push(trip_id);
+        return;
+      }
 
       const times = tripTime.get(trip_id)!!;
       const stops = groupByKey(updates, 'stop_id') as Map<
@@ -122,7 +117,9 @@ parentPort.on('message', async ({ start_date }) => {
   parentPort.postMessage(
     `${threadId} result(${start_date.toLocaleDateString()}): trips: ${
       trip_ids.length
-    } final: ${finalStops.length} removed: ${totalCount} ${
+    } final: ${
+      finalStops.length
+    } removed: ${totalCount} missing: ${notFoundTrips.join(', ')} ${
       Date.now() - startTime
     }ms`
   );

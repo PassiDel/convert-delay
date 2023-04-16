@@ -4,6 +4,14 @@ volumes:
     driver: local
 
 services:
+  convert:
+    image: ghcr.io/passidel/convert-delay:${DELAY_VERSION}
+    build:
+      context: .
+    depends_on:
+      - pgbouncer
+    env_file:
+      - .env
   postgres:
     image: postgres
     environment:

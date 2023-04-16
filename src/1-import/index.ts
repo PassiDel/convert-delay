@@ -3,27 +3,18 @@ import { readdirSync } from 'fs';
 import { PrismaClient } from '@prisma/client';
 
 import cliProgress from 'cli-progress';
-import { resolve } from 'path';
-
-const bar = new cliProgress.MultiBar({}, cliProgress.Presets.shades_classic);
-
-// add job for each folder (gtfs-rt datapoint) in data dir
-const jobs: Promise<string>[] = [];
-const dateFolders = readdirSync(dataDir);
-dateFolders.forEach((dF) => {
-  const path = resolve(dataDir, dF);
-  jobs.push(
-    ...readdirSync(path).map((folder) =>
-      pool.exec({ folder: resolve(path, folder) })
-    )
-  );
-});
-// jobs.push(...folders.slice(40, 90).map((folder) => pool.exec({ folder })));
-const bar1 = bar.create(jobs.length, 0);
-
-const prisma = new PrismaClient();
 
 export async function main() {
+  const bar = new cliProgress.MultiBar({}, cliProgress.Presets.shades_classic);
+
+  // add job for each folder (gtfs-rt datapoint) in data dir
+  const jobs: Promise<string>[] = readdirSync(dataDir).map((folder) =>
+    pool.exec({ folder })
+  );
+  // jobs.push(...folders.slice(40, 90).map((folder) => pool.exec({ folder })));
+  const bar1 = bar.create(jobs.length, 0);
+
+  const prisma = new PrismaClient();
   const startTime = Date.now();
   bar.log(`${new Date().toLocaleString()}\ttruncate\n`);
   await prisma.$queryRaw`TRUNCATE TABLE "StopDelay";`;
@@ -31,7 +22,6 @@ export async function main() {
 
   // execute job queue
   bar.log(`${new Date().toLocaleString()}\tstart\n`);
-  bar1.increment();
   await Promise.allSettled(
     jobs.map(async (p) => {
       try {

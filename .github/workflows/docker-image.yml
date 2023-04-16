@@ -1,0 +1,54 @@
+name: Docker Image CI
+
+on:
+  push:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - run: npm install --frozen-lockfile
+      - name: Build project
+        run: npm run build
+      - name: Upload production-ready build files
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v2
+        with:
+          name: server-build
+          path: |
+            ./.output
+            ./prisma
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Login to Github Packages
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+      - name: Set the value
+        id: step_one
+        run: |
+          echo "git_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: '.'
+          push: true
+          tags: ghcr.io/passidel/convert-delay:${{ github.sha }}, ghcr.io/passidel/convert-delay:${{ env.git_tag }}, ghcr.io/passidel/convert-delay:latest

@@ -1,47 +1,55 @@
-import { dataDir, pool } from './pool.js';
+import { dataDir } from './pool.js';
 import { PrismaClient } from '@prisma/client';
 
 import cliProgress from 'cli-progress';
 import { readdirSync } from 'fs';
-
-const prisma = new PrismaClient();
+import { work } from './worker';
 
 export async function main() {
   const startTime = Date.now();
 
   const bar = new cliProgress.MultiBar({}, cliProgress.Presets.shades_classic);
 
-  bar.log(`${new Date().toLocaleString()}\ttruncate\n`);
+  const log = (arg: string) => {
+    bar.log(`${new Date().toLocaleString()}\t${arg}\n`);
+    bar.update();
+  };
+
+  log('truncate');
+
+  const prisma = new PrismaClient();
   await prisma.$queryRaw`TRUNCATE TABLE "Agency" CASCADE;`;
   await prisma.$queryRaw`TRUNCATE TABLE "Stop" CASCADE;`;
+  await prisma.$queryRaw`TRUNCATE TABLE "Route" CASCADE;`;
+  await prisma.$queryRaw`TRUNCATE TABLE "Trip" CASCADE;`;
+  await prisma.$queryRaw`TRUNCATE TABLE "StopTime" CASCADE;`;
+
+  await prisma.$disconnect();
 
   const dateFolders = readdirSync(dataDir);
-  const jobs: Promise<string>[] = dateFolders.map((folder) =>
-    pool.exec({ folder })
-  );
-  const bar1 = bar.create(jobs.length, 0);
+
+  const bar1 = bar.create(dateFolders.length, 0);
 
   // execute job queue
-  bar.log(`${new Date().toLocaleString()}\tstart\n`);
-  await Promise.allSettled(
-    jobs.map(async (p) => {
-      try {
-        const result = await p;
-        bar.log(`${new Date().toLocaleString()}\t${result}\n`);
-      } catch (e) {
-        let message = 'Unknown Error';
-        if (e instanceof Error) message = e.message;
-        bar.log(`${new Date().toLocaleString()}\t${String(e)}: ${message}\n`);
-      }
-      bar1.increment();
-    })
-  );
-  bar.log(`${new Date().toLocaleString()}\tdestroy\n`);
-  await pool.destroy();
-  bar.log(`${new Date().toLocaleString()}\tstop\n`);
+  log('start');
+  const timeProgress = bar.create(1, 0);
+  const progress = bar.create(1, 0);
+
+  for (const folder of dateFolders) {
+    try {
+      if (global.gc) global.gc();
+      await work(folder, progress, timeProgress, log);
+    } catch (e) {
+      let message = 'Unknown Error';
+      if (e instanceof Error) message = e.message;
+      log(`${String(e)}: ${message}`);
+    }
+    bar1.increment();
+  }
+  log(`destroy`);
+  log(`stop`);
   bar.stop();
-  console.log(`${new Date().toLocaleString()}\tdisconnect\n`);
-  await prisma.$disconnect();
+  console.log(`${new Date().toLocaleString()}\tdisconnect`);
   console.log(`total: ${(Date.now() - startTime) / 1000}s`);
 }
 
