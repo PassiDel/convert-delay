@@ -10,6 +10,8 @@ services:
       context: .
     depends_on:
       - pgbouncer
+    volumes:
+      - ./data:/usr/local/bin/delay/data
     env_file:
       - .env
   postgres:
