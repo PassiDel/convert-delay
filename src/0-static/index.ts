@@ -5,7 +5,7 @@ import cliProgress from 'cli-progress';
 import { readdirSync } from 'fs';
 import { work } from './worker';
 
-export async function main() {
+export async function main(prisma: PrismaClient) {
   const startTime = Date.now();
 
   const bar = new cliProgress.MultiBar({}, cliProgress.Presets.shades_classic);
@@ -17,7 +17,8 @@ export async function main() {
 
   log('truncate');
 
-  const prisma = new PrismaClient();
+  await prisma.$connect();
+
   await prisma.$queryRaw`TRUNCATE TABLE "Agency" CASCADE;`;
   await prisma.$queryRaw`TRUNCATE TABLE "Stop" CASCADE;`;
   await prisma.$queryRaw`TRUNCATE TABLE "Route" CASCADE;`;

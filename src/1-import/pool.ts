@@ -9,7 +9,7 @@ const workerTs = resolve(__dirname, './worker.ts');
 const workerJs = resolve(__dirname, './worker.js');
 export const dataDir = resolve(__dirname, '../../data/gtfsrt-zip');
 export const pool = new StaticPool<(arg0: Input) => Output, DataType>({
-  size: cpus().length / 2,
+  size: cpus().length,
   // size: 1,
   task: filePath,
   workerData: {

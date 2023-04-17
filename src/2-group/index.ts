@@ -3,8 +3,8 @@ import { PrismaClient } from '@prisma/client';
 
 import cliProgress from 'cli-progress';
 
-export async function main() {
-  const prisma = new PrismaClient();
+export async function main(prisma: PrismaClient) {
+  await prisma.$connect();
   const startTime = Date.now();
 
   const bar = new cliProgress.MultiBar({}, cliProgress.Presets.shades_classic);

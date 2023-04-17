@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { DataType, PoolMessage } from './pool.js';
 import { resolve } from 'path';
-const decompress = require('decompress');
+import decompress from 'decompress';
 import {
   FeedMessage,
   hasArrival,
@@ -34,6 +34,7 @@ function loadFile(file: Buffer) {
 }
 
 async function preloadRouteList() {
+  console.log('preload');
   const allowedRoutes = await prisma.route.findMany({
     select: {
       route_id: true,
@@ -46,6 +47,7 @@ async function preloadRouteList() {
     }
   });
 
+  console.log('preloaded', allowedRoutes.length);
   allowedRoutes.forEach(({ route_id, date }) => routeList.set(route_id, date));
 }
 
@@ -62,23 +64,22 @@ parentPort.on('message', async ({ folder }) => {
   const startTime = Date.now();
   // await prisma.$connect();
 
+  console.log('cc', folder);
+
   if (routeList.size <= 0) {
     await preloadRouteList();
   }
-  const allFiles: {
-    data: Buffer;
-    mode: number;
-    mtime: string;
-    path: string;
-    type: string;
-  }[] = await decompress(resolve(workerData.dataDir, folder));
+  const allFiles = await decompress(resolve(workerData.dataDir, folder));
 
   const files = allFiles.filter((f) => f.type === 'file');
   let totalCount = 0;
 
+  console.log('files', files.length);
+
   for (const file of files) {
     const { entries, Header } = loadFile(file.data);
     const timestamp = new Date(Header.Timestamp * 1000);
+    console.log(file.path, timestamp.toLocaleString());
 
     const trips = entries.filter((e) =>
       routeList.has(parseInt(e.TripUpdate.Trip.RouteId) || 0)

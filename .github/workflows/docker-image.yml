@@ -25,7 +25,7 @@ jobs:
         with:
           name: server-build
           path: |
-            ./.output
+            ./dist
             ./prisma
 
   deploy:
