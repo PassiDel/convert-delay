@@ -15,7 +15,6 @@ RUN npm run build
 FROM node:16-alpine AS runner
 
 WORKDIR /usr/local/bin/delay
-EXPOSE 3000
 ENV NODE_ENV=production
 CMD npx prisma db push && npm run start
 

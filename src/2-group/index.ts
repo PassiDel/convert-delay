@@ -15,6 +15,7 @@ export async function main(prisma: PrismaClient) {
   );
   const bar1 = bar.create(jobs.length, 0);
 
+  console.log(dates);
   // execute job queue
   bar.log(`${new Date().toLocaleString()}\tstart\n`);
   await Promise.allSettled(

@@ -67,6 +67,12 @@ parentPort.on('message', async ({ start_date }) => {
       });
       if (!tripTime.has(trip_id) || updates.length <= 0) {
         notFoundTrips.push(trip_id);
+        const { count } = await prisma.stopDelay.deleteMany({
+          where: {
+            AND: [{ start_date }, { trip_id }]
+          }
+        });
+        totalCount += count;
         return;
       }
 
