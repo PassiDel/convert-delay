@@ -8,6 +8,8 @@ import { work } from './worker';
 export async function main(prisma: PrismaClient) {
   const startTime = Date.now();
 
+  const agencyFilter = process.env.AGENCY || 'Bremer Straßenbahn AG';
+
   const bar = new cliProgress.MultiBar({}, cliProgress.Presets.shades_classic);
 
   const log = (arg: string) => {
@@ -32,14 +34,14 @@ export async function main(prisma: PrismaClient) {
   const bar1 = bar.create(dateFolders.length, 0);
 
   // execute job queue
-  log('start');
+  log(`start agency:${agencyFilter}`);
   const timeProgress = bar.create(1, 0);
   const progress = bar.create(1, 0);
 
   for (const folder of dateFolders) {
     try {
       if (global.gc) global.gc();
-      await work(folder, progress, timeProgress, log);
+      await work(folder, agencyFilter, progress, timeProgress, log);
     } catch (e) {
       let message = 'Unknown Error';
       if (e instanceof Error) message = e.message;

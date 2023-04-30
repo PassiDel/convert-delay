@@ -39,11 +39,6 @@ async function preloadRouteList() {
     select: {
       route_id: true,
       date: true
-    },
-    where: {
-      agency_id: {
-        in: workerData.agencyFilter
-      }
     }
   });
 

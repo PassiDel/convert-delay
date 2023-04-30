@@ -65,6 +65,7 @@ function chunk<T>(array: T[], size: number): T[][] {
 
 export async function work(
   folder: string,
+  agencyFilter: string,
   progress: SingleBar,
   timeProgress: SingleBar,
   log: (arg: string) => void
@@ -103,7 +104,7 @@ export async function work(
     'agency_id',
     undefined,
     ['agency_id'],
-    (value) => value.agency_name === 'Bremer Straßenbahn AG'
+    (value) => value.agency_name === agencyFilter
   );
   progress.increment();
 

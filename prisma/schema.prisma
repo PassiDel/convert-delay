@@ -16,16 +16,13 @@ model Strip {
 }
 
 model StripDelay {
-  date      DateTime @db.Timestamp
+  date      DateTime @db.Timestamp(6)
   id        Int      @id @default(autoincrement())
-  //  Trip      Trip     @relation(fields: [trip_id, date], references: [trip_id, date])
   trip_id   Int
-  //  stop1     Stop     @relation(name: "stop1", fields: [stop1_id, date], references: [stop_id, date])
   stop1_id  String
-  //  stop2     Stop     @relation(name: "stop2", fields: [stop2_id, date], references: [stop_id, date])
   stop2_id  String
-  delay     Int      @db.Integer
-  timestamp DateTime @db.Timestamp
+  delay     Int
+  timestamp DateTime @db.Timestamp(6)
 
   @@index([stop1_id, stop2_id])
   @@index([stop1_id])
@@ -34,77 +31,69 @@ model StripDelay {
 }
 
 model StopDelay {
-  date            DateTime @db.Timestamp
+  date            DateTime @db.Timestamp(6)
   id              Int      @id @default(autoincrement())
-  //  Route           Route    @relation(fields: [route_id, date], references: [route_id, date])
   route_id        Int
   trip_id         Int
   stop_id         String?
-  start_time      DateTime @db.Time
+  start_time      DateTime @db.Time(6)
   start_date      DateTime @db.Date
-  arrival_delay   Int?     @db.Integer
-  departure_delay Int?     @db.Integer
-  stopSequence    Int      @db.Integer
-  timestamp       DateTime @db.Timestamp
+  arrival_delay   Int?
+  departure_delay Int?
+  stopSequence    Int
+  timestamp       DateTime @db.Timestamp(6)
 
-  //  @@index([stop_id])
-  //  @@index([route_id])
-  //  @@index([trip_id])
-  //  @@index([timestamp])
-  //  @@index([start_time])
-  //  @@index([start_date])
   @@index([trip_id, start_date])
+  @@index([route_id, date], map: "StopDelay_route_id_date_index")
+  @@index([start_date], map: "StopDelay_start_date_index")
+  @@index([start_time], map: "StopDelay_start_time_index")
+  @@index([stop_id, date, departure_delay, arrival_delay], map: "StopDelay_stop_id_date_departure_delay_arrival_delay_index")
+  @@index([stop_id, date], map: "StopDelay_stop_id_date_index")
 }
 
 model Agency {
-  date            DateTime @db.Timestamp
-  agency_id       Int      @db.Integer
-  agency_name     String   @default("") @db.Text
-  agency_url      String   @default("") @db.Text
-  agency_timezone String   @default("") @db.Text
+  date            DateTime @db.Timestamp(6)
+  agency_id       Int
+  agency_name     String   @default("")
+  agency_url      String   @default("")
+  agency_timezone String   @default("")
   agency_lang     String   @default("de") @db.Char(2)
-  agency_phone    String   @default("") @db.Text
-  //  routes          Route[]
+  agency_phone    String   @default("")
 
   @@unique([date, agency_id])
   @@index([date])
 }
 
 model Route {
-  date             DateTime @db.Timestamp
-  route_id         Int      @db.Integer
-  agency_id        Int      @db.Integer
-  //  agency           Agency      @relation(fields: [agency_id, date], references: [agency_id, date])
-  route_short_name String   @default("") @db.Text
-  route_long_name  String   @default("") @db.Text
+  date             DateTime @db.Timestamp(6)
+  route_id         Int
+  agency_id        Int
+  route_short_name String   @default("")
+  route_long_name  String   @default("")
   route_type       Int      @default(0) @db.SmallInt
   route_color      String   @default("") @db.VarChar(6)
   route_text_color String   @default("") @db.VarChar(6)
-  route_desc       String   @default("") @db.Text
-  //  trips            Trip[]
-  //  StopDelay        StopDelay[]
+  route_desc       String   @default("")
 
   @@unique([date, route_id])
   @@index([agency_id])
   @@index([route_short_name])
   @@index([date])
+  @@index([route_short_name, route_type, route_color, route_text_color], map: "Route_short_name_type_color_text_color_index")
 }
 
 model Trip {
-  date                  DateTime @db.Timestamp
-  //  route                 Route        @relation(fields: [route_id, date], references: [route_id, date])
-  route_id              Int      @db.Integer
+  date                  DateTime @db.Timestamp(6)
+  route_id              Int
   service_id            Int      @default(0) @db.SmallInt
-  trip_id               Int      @db.Integer
-  trip_headsign         String   @default("") @db.Text
-  trip_short_name       String   @default("") @db.Text
+  trip_id               Int
+  trip_headsign         String   @default("")
+  trip_short_name       String   @default("")
   direction_id          Int      @default(0) @db.SmallInt
   block_id              Int?     @db.SmallInt
-  shape_id              Int?     @db.Integer
+  shape_id              Int?
   wheelchair_accessible Int      @default(0) @db.SmallInt
   bikes_allowed         Int      @default(0) @db.SmallInt
-  //  stop_times            StopTime[]
-  //  StripDelay            StripDelay[]
 
   @@unique([date, trip_id])
   @@index([route_id])
@@ -112,17 +101,15 @@ model Trip {
 }
 
 model StopTime {
-  date           DateTime @db.Timestamp
-  //  trip           Trip     @relation(fields: [trip_id, date], references: [trip_id, date])
-  trip_id        Int      @db.Integer
-  arrival_time   DateTime @db.Time
-  departure_time DateTime @db.Time
-  //  stop           Stop     @relation(fields: [stop_id, date], references: [stop_id, date])
-  stop_id        String   @db.Text
-  stop_sequence  Int      @db.Integer
+  date           DateTime @db.Timestamp(6)
+  trip_id        Int
+  arrival_time   DateTime @db.Time(6)
+  departure_time DateTime @db.Time(6)
+  stop_id        String
+  stop_sequence  Int
   pickup_type    Int      @default(0) @db.SmallInt
   drop_off_type  Int      @default(0) @db.SmallInt
-  stop_headsign  String   @default("") @db.Text
+  stop_headsign  String   @default("")
 
   @@unique([date, trip_id, stop_sequence])
   @@index([trip_id])
@@ -130,23 +117,21 @@ model StopTime {
 }
 
 model Stop {
-  date                DateTime @db.Timestamp
-  stop_id             String   @db.Text
-  stop_code           String?  @default("") @db.Text
-  stop_name           String?  @default("") @db.Text
-  stop_desc           String?  @default("") @db.Text
-  stop_lat            String?  @default("") @db.Text
-  stop_lon            String?  @default("") @db.Text
+  date                DateTime @db.Timestamp(6)
+  stop_id             String
+  stop_code           String?  @default("")
+  stop_name           String?  @default("")
+  stop_desc           String?  @default("")
+  stop_lat            String?  @default("")
+  stop_lon            String?  @default("")
   location_type       Int      @default(0) @db.SmallInt
-  parent_station      String?  @default("") @db.Text
+  parent_station      String?  @default("")
   wheelchair_boarding Int      @default(0) @db.SmallInt
-  platform_code       String?  @default("") @db.Text
-  zone_id             String?  @default("") @db.Text
-  //  StopTime            StopTime[]
-
-  //  StripDelay1 StripDelay[] @relation(name: "stop1")
-  //  StripDelay2 StripDelay[] @relation(name: "stop2")
+  platform_code       String?  @default("")
+  zone_id             String?  @default("")
 
   @@unique([date, stop_id])
   @@index([date])
+  @@index([stop_name, date], map: "Stop_stop_name_date_index")
+  @@index([stop_name], map: "Stop_stop_name_index")
 }

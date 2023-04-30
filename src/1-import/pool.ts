@@ -14,9 +14,7 @@ export const pool = new StaticPool<(arg0: Input) => Output, DataType>({
   task: filePath,
   workerData: {
     aliasModule: existsSync(workerTs) ? workerTs : workerJs,
-    dataDir,
-    agencyFilter: [326],
-    maxDelay: 5 * 60
+    dataDir
   }
 });
 export type Input = { folder: string };
@@ -25,8 +23,6 @@ export type Output = string;
 export type DataType = {
   aliasModule: string;
   dataDir: string;
-  agencyFilter: number[];
-  maxDelay: number;
 };
 
 export interface PoolMessage extends Omit<MessagePort, 'on' | 'postMessage'> {
